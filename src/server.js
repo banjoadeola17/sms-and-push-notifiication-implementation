@@ -1,10 +1,11 @@
 import restify from "restify";
 import dotenv from "dotenv";
 
-import message  from "./resources/notification";
+import message  from "./resources/sms";
+import notification  from "./resources/push-notification";
 
 const server = restify.createServer({
-  name: "swvl-notification",
+  name: "swvl-sms-push-notification",
   version: "1.0.0",
 });
 
@@ -15,5 +16,6 @@ server.use(restify.plugins.queryParser());
 server.use(restify.plugins.bodyParser());
 
 message({ server, subBase: "/message" });
+notification({ server, subBase: "/notification" });
 
 export default server;

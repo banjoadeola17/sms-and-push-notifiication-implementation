@@ -2,7 +2,7 @@ import { describe, it} from "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "chai/register-should";
-import * as notificationService from "../../src/resources/notification/notification.service";
+import * as smsService from "../../src/resources/sms/sms.service";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -12,7 +12,7 @@ describe("Notification service", () => {
   it("should fail when null is passed", async () => {
     const params = {}
     try {
-      await notificationService.sendMessageUponClientRestfulRequest(params);
+      await smsService.sendMessageUponClientRestfulRequest(params);
     } catch (error) {
       expect(error?.message).contains("request body is required");
       expect(error?.statusCode).equals(400);
@@ -30,7 +30,7 @@ describe("Notification service", () => {
     };
 
     try {
-      await notificationService.sendMessageUponClientRestfulRequest(
+      await smsService.sendMessageUponClientRestfulRequest(
         notificationModel
       );
     } catch (error) {
@@ -50,7 +50,7 @@ describe("Notification service", () => {
     };
 
     try {
-      await notificationService.sendMessageUponClientRestfulRequest(
+      await smsService.sendMessageUponClientRestfulRequest(
         notificationModel
       );
     } catch (error) {
@@ -68,11 +68,11 @@ describe("Notification service", () => {
       sender: "swvl",
       type: "SMS",
     };
-    // try {
-    //     await notificationService.sendMessageUponClientRestfulRequest(notificationModel);
-    // } catch (error) {
-    //     expect(error?.message).contains("request body is required");
-    //     expect(error?.statusCode).equals(400);
-    // }
+    try {
+        await smsService.sendMessageUponClientRestfulRequest(notificationModel);
+    } catch (error) {
+        expect(error?.message).contains("request body is required");
+        expect(error?.statusCode).equals(400);
+    }
   });
 });

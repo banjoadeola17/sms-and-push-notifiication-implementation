@@ -1,9 +1,17 @@
 import Joi from "@hapi/joi";
 import logger from "../../logger.js";
-import { NotificationType, userData } from "./notification.model";
-import type { NotificationModel } from "./notification.model";
+import { userData } from "../datasource";
+import type { SmsModel } from "./sms.model";
 import { BAD_REQUEST, OK } from "../../modules/util.js";
-import { smsProvider, pushNotificationProvider } from "./notification.provider";
+import { sampleProvider } from "./sample/sample.provider";
+import type { SmsProvider } from "./sms.model"
+import {smsProvider} from "./sms.provider"
+
+
+const sendSms = (sms: SmsModel) => {
+  const provider: SmsProvider = smsProvider();
+  return provider.send(sms);
+};
 
 export const sendMessageUponClientRestfulRequest = async ({ params }) => {
   if (!params) {
@@ -40,16 +48,14 @@ export const sendMessageUponClientRestfulRequest = async ({ params }) => {
   }
 };
 
-const sendMessageToUsers = async (notificationModel: NotificationModel) => {
+const sendMessageToUsers = async (smsModel: SmsModel) => {
   logger.info(
-    `::: notification model received as [${JSON.stringify(
-      notificationModel
-    )}]:::`
+    `::: sms model received as [${JSON.stringify(smsModel)}]:::`
   );
 
-  notificationModel.sender = "swvl";
+  smsModel.sender = "swvl";
 
-  let { userIds, allUsers } = notificationModel;
+  let { userIds, allUsers } = smsModel;
 
   let phoneNumbers;
   if (allUsers) {
@@ -62,38 +68,20 @@ const sendMessageToUsers = async (notificationModel: NotificationModel) => {
       phoneNumbers.length === 1 ? phoneNumbers[0] : "List of phone numbers";
   }
 
-  transcribeToPreferredLanguage(notificationModel.message);
+  transcribeToPreferredLanguage(smsModel.message);
 
-  if (
-    notificationModel.type === NotificationType.SMS &&
-    notificationModel.userIds.length > 0
-  ) {
-    // messages are meant to be sent in batches
-    // 2 was chosen as limit for sms provider for test
-    for (let i = 0; i < notificationModel.userIds.length; i = i + 2) {
-      messageTo = phoneNumbers.slice(i, i + 2);
-      logger.info(
-        `The phone numbers to be sent to provider for SMS message: ${JSON.stringify(
-          messageTo
-        )}`
-      );
-      await smsProvider(messageTo);
-    }
-    return;
-  } else if (notificationModel.type === NotificationType.PUSH_NOTIFICATION) {
-    // messages are meant to be sent in batches
-    // 100 was chosen as limit for push notificaton provider
-    for (let i = 0; i < notificationModel.userIds.length; i = i + 100) {
-      messageTo = phoneNumbers.slice(i, i + 100);
-      logger.info(
-        `The phone numbers to be sent to provider for push notification message: ${JSON.stringify(
-          messageTo
-        )}`
-      );
-      await pushNotificationProvider(messageTo);
-    }
-    return;
+  // messages are meant to be sent in batches
+  // 2 was chosen as limit for sms provider for test
+  for (let i = 0; i < smsModel.userIds.length; i = i + 2) {
+    messageTo = phoneNumbers.slice(i, i + 2);
+    logger.info(
+      `The phone numbers to be sent to provider for SMS message: ${JSON.stringify(
+        messageTo
+      )}`
+    );
+    await sendSms(messageTo);
   }
+  return;
 };
 
 const mapUsersPhoneNumbers = ({ userData, userIds }) => {
@@ -101,7 +89,6 @@ const mapUsersPhoneNumbers = ({ userData, userIds }) => {
   userData.forEach((user) => {
     if (userIds.includes(user.userId)) {
       phoneNumbers.push(user.phoneNumber);
-      // console.log("phoneNumbers", phoneNumbers)
     }
   });
   return phoneNumbers;

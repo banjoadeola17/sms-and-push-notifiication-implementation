@@ -1,9 +1,9 @@
-import { sendMessageUponClientRestfulRequest } from "./notification.service";
+import { sendNotiticationUponClientRestfulRequest } from "./push-notification.service";
 
-export const sendMessage = (req, res) => {
+export const sendNotification = (req, res) => {
   const params = req.body;
 
-  sendMessageUponClientRestfulRequest({ params })
+  sendNotiticationUponClientRestfulRequest({ params })
     .then(({ statusCode, data }) => {
       res.send(statusCode, { status: true, data });
     })
